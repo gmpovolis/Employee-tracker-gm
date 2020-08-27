@@ -67,6 +67,7 @@ function main(){
             case "View all departments":
                 break;
             case "Add department":
+                addDepartment();
                 break;
             case "Remove department":
                 break;
@@ -257,5 +258,19 @@ function getDepartment(){
             ID.push(res[i].id);
         }
         addRole(departments, ID);
+    })
+};
+
+function addDepartment(){
+    inquirer.prompt({
+        name: "department",
+        type: "input",
+        message: "Enter a department"
+    }).then(function(answer){
+        var query = "INSERT INTO department (name) VALUES('"+answer.department+"')";
+        connection.query(query, function(err){
+            if (err) throw err;
+            console.log("Adding department to database");
+        })
     })
 };
