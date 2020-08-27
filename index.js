@@ -49,6 +49,7 @@ function main(){
                 getMan();
                 break;
             case "Add employee":
+                getRole();
                 break;
             case "Remove employee":
                 break;
@@ -59,6 +60,7 @@ function main(){
             case "View all roles":
                 break;
             case "Add role":
+                getDepartment();
                 break;
             case "Remove role":
                 break;
@@ -80,7 +82,7 @@ function viewAll(){
     connection.query(query, function(err, res){
         if (err) throw err;
         for(var i = 0; i<res.length;i++){
-            console.table(res[i].first_name+" "+res[i].last_name);
+            table(res[i].first_name+" "+res[i].last_name);
         }
     })
     main();
@@ -145,10 +147,115 @@ function viewMan(managers, employeeId){
         connection.query(query, employeeId[index], function(err, res){
             if (err) throw err;
             for(var i = 0; i<res.length; i++){
-                console.table(res[i].first_name+" "+res[i].last_name);
+                table(res[i].first_name+" "+res[i].last_name);
             }
         })
         main();
     })
 };
 
+function add(titles, ids, managers, employeeId){
+    inquirer.prompt(
+    {
+        name: "first",
+        type: "input",
+        message: "What is the employee's first name?"
+    },
+    {
+        name: "last",
+        type: "input",
+        message: "What is the employee's last name?"
+    },
+    {
+        name: "role",
+        type: "list",
+        message: "What is the employee's role?",
+        choices: titles
+    },
+    {
+        name: "manager",
+        type: "list",
+        message: "Who is the employee's manager",
+        choices: "none", managers
+    }).then(function(answer){
+        var idIndex = titles.indexOf(answer.role);
+        if(answer.manager){
+            var manIndex=managers.indexOf(answer.manager)
+        } else{employeeId[manIndex]= null };
+        var add = "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES('"+answer.first_name+"', '"+answer.last_name+"', "+ids[idIndex]+","+employeeId[manIndex]+")"
+        connection.query(add, function(err){
+            if (err) throw err;
+            console.log("Adding employee to database")
+        });
+        main();
+    })
+    
+}
+
+function getRole(){
+    var query = "SELECT title, id FROM role"
+    connection.query(query, function(err, res){
+        if(err) throw err;
+        var titles=[];
+        var ids =[];
+        for(var i =0; i<res.length; i++){
+            titles.push(res[i].title);
+            ids.push(res[i].id);
+        }
+        getManagers(titles, ids);
+    })
+}
+
+function getManagers(titles, ids){
+    var query = "SELECT first_name, last_name, id FROM employee WHERE manager_id IS NULL";
+    var managers = [];
+    var employeeId = [];
+    connection.query(query, function(err, res){
+        for(var i =0; i<res.length; i++){
+            managers.push(res[i].first_name+" "+res[i].last_name)
+            employeeId.push(res[i].id)
+        }
+        add(titles, ids, managers, employeeId);
+    })
+};
+
+function addRole(departments, ID){
+    inquirer.prompt(
+        {
+            name: "title",
+            type: "input",
+            message: "What is the title of the role?"
+        },
+        {
+            name: "salary",
+            type: "input",
+            message: "What is the salary of this role?"
+        },
+        {
+            name: "department_id",
+            type: "list",
+            message: "Choose the department",
+            choices: departments
+        }).then(function(answer){
+            var index = ID.indexOf(answer.department_id)
+            var addRole = "INSERT INTO role (title, salary, department_id) Values('"+answer.title+"', '"+answer.salary+"', "+ID[index]+")";
+            connection.query(addRole, function(err){
+                if(err) throw err;
+                console.log("Adding role to database")
+            })
+
+        })
+}
+
+function getDepartment(){
+    var query = "SELECT name, id FROM department";
+    var departments = [];
+    var ID = [];
+    connection.query(query, function(err, res){
+        for(var i =0; i<res.length; i++){
+            departments.push(res[i].name);
+            ID.push(res[i].id);
+        }
+        addRole(departments, ID);
+    })
+};
