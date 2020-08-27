@@ -1,21 +1,9 @@
-open:
-Q: What would you like to do?
-options:
-view all employees
-view all employees by department
-view all employees by manager
-add employee
-remove employee
-update employee role
-update employee manager
-view all roles
-add role
-remove role
-view all departments
-add department
-remove department
-quit
+# Employee-tracker-gm
 
-role.department_id = department.id
-employee.role_id = role.id
-employee.manager_id = employee.id
+## Description
+
+This is a CLI application that utilizes MySQL, and Inquirer to traverse through multiple tables in the employees database, allowing the user to view employees, departments, and roles. Add employees, departments, and roles. And update employee roles.
+
+## Usage
+
+To use the application the user will first need to go to the index.js file and fill in the password for their MySQL on line 9. Then they will have to do an npm i to install all the dependencies.

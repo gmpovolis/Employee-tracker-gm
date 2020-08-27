@@ -6,7 +6,7 @@ var connection = mysql.createConnection({
     host: "localhost",
     port: process.env.PORT || 3306,
     user: "root",
-    password: "blu3snak3",
+    password: "",
     database: "employees"
 });
 
@@ -54,10 +54,12 @@ function main(){
             case "Remove employee":
                 break;
             case "Update employee role":
+                getEmployee();
                 break;
             case "Update employee manager":
                 break;
             case "View all roles":
+                viewRole();
                 break;
             case "Add role":
                 getDepartment();
@@ -65,6 +67,7 @@ function main(){
             case "Remove role":
                 break;
             case "View all departments":
+                viewDepartment();
                 break;
             case "Add department":
                 addDepartment();
@@ -79,13 +82,15 @@ function main(){
 };
 
 function viewAll(){
-    var query = "SELECT first_name, last_name FROM employee";
+    var query = "SELECT * FROM employee";
     connection.query(query, function(err, res){
         if (err) throw err;
-        for(var i = 0; i<res.length;i++){
-            table(res[i].first_name+" "+res[i].last_name);
-        }
+        console.table("\n",res)
+        // for(var i = 0; i<res.length;i++){
+        //     table(res[i].first_name+" "+res[i].last_name);
+        // }
     })
+    console.log("\n");
     main();
 };
 
@@ -97,7 +102,6 @@ function getDep(){
         for(var i=0;i<res.length;i++){
             departments.push(res[i].name);
         }
-        console.log("the parts:", departments);
         viewDep(departments);
     });
 }
@@ -113,10 +117,9 @@ function viewDep(departments){
         var query = "SELECT first_name, last_name, department_id, name FROM employee inner join role ON role.id = employee.id left JOIN department ON role.department_id = department.id WHERE department.name = ?";
         connection.query(query, answer.department, function(err, res){
             if (err) throw err;
-            for(var i = 0; i<res.length;i++){
-                console.table(res[i].first_name+" "+res[i].last_name);
-            }
+            console.table("\n",res);
         })
+        console.log("\n");
         main();
     })
 };
@@ -147,16 +150,15 @@ function viewMan(managers, employeeId){
         var index = managers.indexOf(answer.manager)
         connection.query(query, employeeId[index], function(err, res){
             if (err) throw err;
-            for(var i = 0; i<res.length; i++){
-                table(res[i].first_name+" "+res[i].last_name);
-            }
+            console.table("\n",res);
         })
+        console.log("\n");
         main();
     })
 };
 
-function add(titles, ids, managers, employeeId){
-    inquirer.prompt(
+async function add(titles, ids, managers, employeeId){
+    await inquirer.prompt(
     {
         name: "first",
         type: "input",
@@ -188,6 +190,7 @@ function add(titles, ids, managers, employeeId){
             if (err) throw err;
             console.log("Adding employee to database")
         });
+        console.log("\n");
         main();
     })
     
@@ -244,7 +247,8 @@ function addRole(departments, ID){
                 if(err) throw err;
                 console.log("Adding role to database")
             })
-
+            console.log("\n");
+            main();
         })
 }
 
@@ -272,5 +276,67 @@ function addDepartment(){
             if (err) throw err;
             console.log("Adding department to database");
         })
+        console.log("\n");
+        main();
+    })
+};
+
+function viewRole(){
+    var query = "SELECT * FROM role"
+    connection.query(query, function(err, res){
+        console.table("\n",res);
+    })
+    console.log("\n");
+    main();
+};
+
+function viewDepartment(){
+    var query = "SELECT * FROM department"
+    connection.query(query, function(err, res){
+        if (err) throw err;
+        console.table("\n",res);
+    })
+    console.log("\n");
+    main();
+};
+
+function update(employees, employeeId, titles, role_id){
+    inquirer.prompt(
+        {
+            name: "employee",
+            type: "list",
+            message: "Pick the employee you want to update",
+            choices: employees
+        },
+        {
+            name: "role",
+            type: "list",
+            message: "Select the desired new role",
+            choices: titles
+        }).then(function(answer){
+            var employeeIndex = employees.indexOf(answer.employee);
+            var roleIndex = titles.indexOf(answer.role);
+            var query = "UPDATE employee SET role_id = "+role.id[roleIndex]+"WHERE id = "+employeeId[employeeIndex]+"";
+            connection.query(query, function(err){
+                if(err) throw err;
+                console.log("Updating employee's role");
+            })
+        })
+}
+
+function getEmployee(){
+    var query = "SELECT * FROM employee FULL JOIN role ON role_id = role.id";
+    connection.query(query, function(err, res){
+        var employees = [];
+        var employeeIds = [];
+        var titles = [];
+        var role_id = [];
+        for (var i=0; i<res.length; i++){
+            employees.push(res[i].first_name+" "+res[i].last_name);
+            employeeIds.push(res[i].id);
+            titles.push(res[i].title);
+            role_id.push(res[i].role_id);
+        }
+        update(employees, employeeIds, titles, role_id);
     })
 };
